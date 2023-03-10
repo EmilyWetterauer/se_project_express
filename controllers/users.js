@@ -19,27 +19,24 @@ function getUsers(req, res) {
 function getUser(req, res) {
   User.findById(req.params._id)
     .orFail(() => {
-      if (ObjectId.isValid(req.params._id)) {
-        const error = new Error(ERROR_CODE_404.message);
-        error.statusCode = ERROR_CODE_404.status;
-        throw error;
-      } else {
-        const error = new Error(ERROR_CODE_400.message);
-        error.statusCode = ERROR_CODE_400.status;
-        throw error;
-      }
+      const error = new Error("Item ID not found");
+      error.statusCode = 404;
+      throw error;
     })
     .then((user) => {
       res.send({ data: user });
     })
-    .catch((error) =>
-      res
-        .status(error.statusCode || ERROR_CODE_500.status)
-        .send({ message: error.message || ERROR_CODE_500.message, error })
-    );
-
-  console.log(req);
-  console.log(res);
+    .catch((err) => {
+      if (err.statusCode === 404) {
+        res.status(ERROR_CODE_404.status).send({ message: error.message });
+      } else if (err.name === "CastError") {
+        res.status(ERROR_CODE_400.status).send({ message: error.message });
+      } else {
+        res
+          .status(ERROR_CODE_500.status)
+          .send({ message: ERROR_CODE_500.message, err });
+      }
+    });
 }
 
 function createUser(req, res) {
@@ -47,14 +44,17 @@ function createUser(req, res) {
 
   User.create({ name, avatar })
     .then((user) => res.send({ data: user }))
-    .catch((err) =>
-      res
-        .status(ERROR_CODE_400.status)
-        .send({ message: ERROR_CODE_400.message })
-    );
-  // console.log(req);
-  // res.send(200);
-  // console.log(res);
+    .catch((err) => {
+      if (err.name === "ValidationError") {
+        res
+          .status(ERROR_CODE_400.status)
+          .send({ message: ERROR_CODE_400.message });
+      } else {
+        res
+          .status(ERROR_CODE_500.status)
+          .send({ message: ERROR_CODE_500.message, err });
+      }
+    });
 }
 
 module.exports = { getUser, getUsers, createUser };

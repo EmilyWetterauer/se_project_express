@@ -1,11 +1,5 @@
 const express = require("express");
-
 const mongoose = require("mongoose");
-// const bodyParser = require("body-parser");
-// const http = require("http");
-
-// const server = http.createServer(() => {});
-
 const app = express();
 
 mongoose
@@ -21,11 +15,9 @@ const routes = require("./routes");
 
 app.use(express.json());
 app.use((req, res, next) => {
-  console.log("req", req);
   req.user = {
-    _id: "5d8b8592978f8bd833ca8133", // paste the _id of the test user created in the previous step
+    _id: "5d8b8592978f8bd833ca8133",
   };
-  console.log("req user _id", req.user._id);
   next();
 });
 app.use(routes);

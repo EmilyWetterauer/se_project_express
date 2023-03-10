@@ -7,7 +7,7 @@ const {
   likeItem,
   dislikeItem,
 } = require("../controllers/clothingItems");
-//CRUD
+// CRUD
 
 router.get("/", getItems);
 router.post("/", createItem);

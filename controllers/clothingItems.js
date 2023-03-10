@@ -3,7 +3,9 @@ const {
   ERROR_CODE_400,
   ERROR_CODE_404,
 } = require("../utils/errors");
+const ObjectId = require("mongoose").Types.ObjectId;
 const ClothingItem = require("../models/clothingItem");
+
 
 const getItems = (req, res) => {
   ClothingItem.find()
@@ -17,15 +19,15 @@ const getItems = (req, res) => {
 };
 
 const createItem = (req, res) => {
-  console.log(req);
-  console.log(req.body._id);
-
+  // console.log(req);
+  // console.log(req.body._id);
+const owner=req.user._id;
   const { name, weather, imageUrl } = req.body;
-  // console.log(req.user.id); // _id will become accessible
+  console.log(req.user.id); // _id will become accessible
 
-  ClothingItem.create({ name, weather, imageUrl })
+  ClothingItem.create({ name, weather, imageUrl, owner })
     .then((item) => {
-      res.send({ data: item });
+      res.status(200).send({ data: item });
     })
     .catch((error) => {
       res
@@ -45,11 +47,19 @@ const deleteItem = (req, res) => {
     .then((item) => {
       res.send({ data: item });
     })
-    .catch((error) =>
-      res
-        .status(ERROR_CODE_404.status)
-        .send({ message: ERROR_CODE_404.message, error })
-    );
+    .catch((error) => {
+    if (ObjectId.isValid(req.params._id)){
+      res.status(ERROR_CODE_404.status) 
+          .send({ message: error.message })
+
+    } else {
+      res.status(ERROR_CODE_400.status) 
+          .send({ message: error.message })
+
+    }
+
+      
+  });
 };
 
 const likeItem = (req, res) => {
@@ -61,19 +71,40 @@ const likeItem = (req, res) => {
     { new: true }
   )
     .orFail(() => {
-      const error = new Error("Item ID not found");
-      error.statusCode = 404;
-      throw error;
+      if (ObjectId.isValid(req.params._id)) {
+        const error = new Error(ERROR_CODE_404.message);
+        error.statusCode = ERROR_CODE_404.status;
+        throw error;
+      } else {
+        const error = new Error(ERROR_CODE_400.message);
+        error.statusCode = ERROR_CODE_400.status;
+        throw error;
+      }
+      // const error = new Error("Item ID not found");
+      // error.statusCode = 400;
+      // throw error;
     })
     .then((item) => {
       res.send({ data: item });
     })
-    .catch((error) =>
-      res
-        .status(ERROR_CODE_404.status)
-        .send({ message: ERROR_CODE_404.message, error })
-    );
-};
+    .catch((error) => {
+      if (ObjectId.isValid(req.params._id)){
+        res.status(ERROR_CODE_404.status) 
+            .send({ message: error.message })
+
+      } else {
+        res.status(ERROR_CODE_400.status) 
+            .send({ message: error.message })
+
+      }
+
+        // || ERROR_CODE_500.message, error 
+
+    //     res.status(ERROR_CODE_400.status)
+    //     .send({ message: ERROR_CODE_400.message, error })
+
+}
+    )};
 
 const dislikeItem = (req, res) => {
   ClothingItem.findByIdAndUpdate(
@@ -82,22 +113,41 @@ const dislikeItem = (req, res) => {
     { new: true }
   )
     .orFail(() => {
-      const error = new Error("Item ID not found");
-      error.statusCode = 404;
-      throw error;
-    })
+        if (ObjectId.isValid(req.params._id)) {
+          const error = new Error(ERROR_CODE_404.message);
+          error.statusCode = ERROR_CODE_404.status;
+          throw error;
+        } else {
+          const error = new Error(ERROR_CODE_400.message);
+          error.statusCode = ERROR_CODE_400.status;
+          throw error;
+        }
+      })
+
+
+    //   const error = new Error("Item ID not found");
+    //   error.statusCode = 400;
+    //   throw error;
+    // })
     .then((item) => {
       res.send({ data: item });
     })
-    .catch((error) =>
-      res
-        .status(ERROR_CODE_404.status)
-        .send({ message: ERROR_CODE_404.message, error })
-    );
+    .catch((error) => {
+    if (ObjectId.isValid(req.params._id)){
+      res.status(ERROR_CODE_404.status) 
+          .send({ message: error.message })
+
+    } else {
+      res.status(ERROR_CODE_400.status) 
+          .send({ message: error.message })
+
+    }
+      
+  });
 };
 
 module.exports = { getItems, createItem, deleteItem, likeItem, dislikeItem };
 
 module.exports.createClothingItem = (req, res) => {
-  console.log(req.user._id); // _id will become accessible
+  // console.log(req.user._id); // _id will become accessible
 };

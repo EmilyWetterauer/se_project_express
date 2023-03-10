@@ -3,7 +3,7 @@ const {
   ERROR_CODE_400,
   ERROR_CODE_404,
 } = require("../utils/errors");
-
+const ObjectId = require("mongoose").Types.ObjectId;
 const User = require("../models/user");
 
 function getUsers(req, res) {
@@ -19,9 +19,15 @@ function getUsers(req, res) {
 function getUser(req, res) {
   User.findById(req.params._id)
     .orFail(() => {
-      const error = new Error(ERROR_CODE_404.message);
-      error.statusCode = ERROR_CODE_404.status;
-      throw error;
+      if (ObjectId.isValid(req.params._id)) {
+        const error = new Error(ERROR_CODE_404.message);
+        error.statusCode = ERROR_CODE_404.status;
+        throw error;
+      } else {
+        const error = new Error(ERROR_CODE_400.message);
+        error.statusCode = ERROR_CODE_400.status;
+        throw error;
+      }
     })
     .then((user) => {
       res.send({ data: user });

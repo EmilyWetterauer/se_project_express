@@ -4,18 +4,16 @@ const {
   ERROR_CODE_404,
 } = require("../utils/errors");
 
-const ObjectId = require("mongoose").Types.ObjectId;
-
 const ClothingItem = require("../models/clothingItem");
 
 const getItems = (req, res) => {
   ClothingItem.find()
     .then((item) => res.send({ data: item }))
-    .catch((error) => {
-      return res
+    .catch(() =>
+      res
         .status(ERROR_CODE_500.status)
-        .send({ message: ERROR_CODE_500.message, error });
-    });
+        .send({ message: ERROR_CODE_500.message })
+    );
 };
 
 const createItem = (req, res) => {
@@ -30,11 +28,11 @@ const createItem = (req, res) => {
       if (err.name === "ValidationError") {
         res
           .status(ERROR_CODE_400.status)
-          .send({ message: ERROR_CODE_400.message, err });
+          .send({ message: ERROR_CODE_400.message });
       } else {
         res
           .status(ERROR_CODE_500.status)
-          .send({ message: ERROR_CODE_500.message, err });
+          .send({ message: ERROR_CODE_500.message });
       }
     });
 };
@@ -49,17 +47,19 @@ const deleteItem = (req, res) => {
     .then((item) => {
       res.send({ data: item });
     })
-    .catch((error) => {
-      if (error.statusCode === 404) {
-        res.status(ERROR_CODE_404.status).send({ message: error.message });
+    .catch((err) => {
+      if (err.statusCode === 404) {
+        res
+          .status(ERROR_CODE_404.status)
+          .send({ message: ERROR_CODE_404.message });
       } else if (err.name === "CastError") {
         res
           .status(ERROR_CODE_400.status)
-          .send({ message: ERROR_CODE_400.message, err });
+          .send({ message: ERROR_CODE_400.message });
       } else {
         res
           .status(ERROR_CODE_500.status)
-          .send({ message: ERROR_CODE_500.message, err });
+          .send({ message: ERROR_CODE_500.message });
       }
     });
 };
@@ -71,22 +71,26 @@ const likeItem = (req, res) => {
     { new: true }
   )
     .orFail(() => {
-      if (error.statusCode === 404) {
-        res.status(ERROR_CODE_404.status).send({ message: error.message });
-      }
+      const error = new Error("Item ID not found");
+      error.statusCode = 404;
+      throw error;
     })
     .then((item) => {
       res.send({ data: item });
     })
     .catch((err) => {
       if (err.statusCode === 404) {
-        res.status(ERROR_CODE_404.status).send({ message: error.message });
+        res
+          .status(ERROR_CODE_404.status)
+          .send({ message: ERROR_CODE_404.message });
       } else if (err.name === "CastError") {
-        res.status(ERROR_CODE_400.status).send({ message: error.message });
+        res
+          .status(ERROR_CODE_400.status)
+          .send({ message: ERROR_CODE_400.message });
       } else {
         res
           .status(ERROR_CODE_500.status)
-          .send({ message: ERROR_CODE_500.message, err });
+          .send({ message: ERROR_CODE_500.message });
       }
     });
 };
@@ -107,13 +111,17 @@ const dislikeItem = (req, res) => {
     })
     .catch((err) => {
       if (err.statusCode === 404) {
-        res.status(ERROR_CODE_404.status).send({ message: error.message });
+        res
+          .status(ERROR_CODE_404.status)
+          .send({ message: ERROR_CODE_404.message });
       } else if (err.name === "CastError") {
-        res.status(ERROR_CODE_400.status).send({ message: error.message });
+        res
+          .status(ERROR_CODE_400.status)
+          .send({ message: ERROR_CODE_400.message });
       } else {
         res
           .status(ERROR_CODE_500.status)
-          .send({ message: ERROR_CODE_500.message, err });
+          .send({ message: ERROR_CODE_500.message });
       }
     });
 };

@@ -1,8 +1,15 @@
+const bcrypt = require("bcrypt");
+
 const {
   ERROR_CODE_500,
   ERROR_CODE_400,
+  ERROR_CODE_401,
   ERROR_CODE_404,
+  ERROR_CODE_422,
 } = require("../utils/errors");
+const jwt = require("jsonwebtoken");
+
+const JWT_SECRET = require("../utils/config");
 
 const User = require("../models/user");
 
@@ -31,7 +38,7 @@ function getUser(req, res) {
         res
           .status(ERROR_CODE_404.status)
           .send({ message: ERROR_CODE_404.message });
-      } else if (err.name === "CastError") {
+      } else if (err.statusCode === 400 || err.name === "CastError") {
         res
           .status(ERROR_CODE_400.status)
           .send({ message: ERROR_CODE_400.message });
@@ -44,21 +51,48 @@ function getUser(req, res) {
 }
 
 function createUser(req, res) {
-  const { name, avatar } = req.body;
+  const { name, avatar, email, password } = req.body;
 
-  User.create({ name, avatar })
-    .then((user) => res.send({ data: user }))
-    .catch((err) => {
-      if (err.name === "ValidationError") {
-        res
-          .status(ERROR_CODE_400.status)
-          .send({ message: ERROR_CODE_400.message });
+  bcrypt.hash(password, 10).then((hash) =>
+    User.create({ name, avatar, email, password: hash })
+
+      .then((user) => res.send({ data: user }))
+      .catch((err) => {
+        if (err.name === "ValidationError") {
+          res
+            .status(ERROR_CODE_400.status)
+            .send({ message: ERROR_CODE_400.message });
+        } else if (err.code === 11000) {
+          res
+            .status(ERROR_CODE_422.status)
+            .send({ message: ERROR_CODE_422.message });
+        } else {
+          res
+            .status(ERROR_CODE_500.status)
+            .send({ message: ERROR_CODE_500.message });
+        }
+      })
+  );
+}
+
+function login(req, res) {
+  const { email, password } = req.body;
+  User.findUserByCredentials(email, password)
+    .then((validCredentials) => {
+      if (validCredentials) {
+        const token = jwt.sign({ _id: email }, JWT_SECRET, {
+          expiresIn: "7d",
+        });
+        res.send({ token });
       } else {
-        res
-          .status(ERROR_CODE_500.status)
-          .send({ message: ERROR_CODE_500.message });
+        throw new Error();
       }
+    })
+    .catch((err) => {
+      res
+        .status(ERROR_CODE_401.status)
+        .send({ message: ERROR_CODE_401.message });
     });
 }
 
-module.exports = { getUser, getUsers, createUser };
+module.exports = { getUser, getUsers, createUser, login };

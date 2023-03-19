@@ -9,8 +9,7 @@ const {
 } = require("../utils/errors");
 const jwt = require("jsonwebtoken");
 
-const JWT_SECRET = require("../utils/config");
-
+const { JWT_SECRET } = process.env;
 const User = require("../models/user");
 
 function getUsers(req, res) {
@@ -78,9 +77,9 @@ function createUser(req, res) {
 function login(req, res) {
   const { email, password } = req.body;
   User.findUserByCredentials(email, password)
-    .then((validCredentials) => {
-      if (validCredentials) {
-        const token = jwt.sign({ _id: email }, JWT_SECRET, {
+    .then((user) => {
+      if (user) {
+        const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
           expiresIn: "7d",
         });
         res.send({ token });

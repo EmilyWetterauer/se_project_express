@@ -94,4 +94,70 @@ function login(req, res) {
     });
 }
 
-module.exports = { getUser, getUsers, createUser, login };
+const getCurrentUser = (req, res, next) => {
+  // console.log("req.params.id", req.params.id);
+  User.findById(req.body._id)
+    .orFail(() => {
+      const error = new Error("Item ID not found");
+      error.statusCode = 404;
+      throw error;
+    })
+    .then((user) => {
+      res.send({ data: user });
+    })
+    .catch((err) => {
+      if (err.statusCode === 404) {
+        res
+          .status(ERROR_CODE_404.status)
+          .send({ message: ERROR_CODE_404.message });
+      } else if (err.statusCode === 400 || err.name === "CastError") {
+        res
+          .status(ERROR_CODE_400.status)
+          .send({ message: ERROR_CODE_400.message });
+      } else {
+        res
+          .status(ERROR_CODE_500.status)
+          .send({ message: ERROR_CODE_500.message });
+      }
+    });
+};
+
+const updateProfile = (req, res) => {
+  User.findOneAndUpdate(
+    { _id: req.body._id },
+    { name: "michael" },
+    { new: true }
+  )
+    .orFail(() => {
+      const error = new Error("Item ID not found");
+      error.statusCode = 404;
+      throw error;
+    })
+    .then((user) => {
+      res.send({ data: user });
+    })
+    .catch((err) => {
+      if (err.statusCode === 404) {
+        res
+          .status(ERROR_CODE_404.status)
+          .send({ message: ERROR_CODE_404.message });
+      } else if (err.statusCode === 400 || err.name === "CastError") {
+        res
+          .status(ERROR_CODE_400.status)
+          .send({ message: ERROR_CODE_400.message });
+      } else {
+        res
+          .status(ERROR_CODE_500.status)
+          .send({ message: ERROR_CODE_500.message });
+      }
+    });
+};
+
+module.exports = {
+  getUser,
+  getUsers,
+  createUser,
+  login,
+  getCurrentUser,
+  updateProfile,
+};

@@ -4,6 +4,8 @@ const {
   ERROR_CODE_404,
 } = require("../utils/errors");
 
+const jwt = require("jsonwebtoken");
+
 const ClothingItem = require("../models/clothingItem");
 
 const getItems = (req, res) => {
@@ -38,14 +40,29 @@ const createItem = (req, res) => {
 };
 
 const deleteItem = (req, res) => {
-  ClothingItem.findByIdAndRemove(req.params._id)
+  const { authorization } = req.headers;
+  const token = authorization.replace("Bearer ", "");
+  const { _id: loggedInUserId } = jwt.decode(token, { json: true });
+  console.log("loggedIn USer", loggedInUserId);
+  ClothingItem.findById(req.params._id)
     .orFail(() => {
       const error = new Error("Item ID not found");
       error.statusCode = 404;
       throw error;
     })
     .then((item) => {
-      res.send({ data: item });
+      if (item.owner !== loggedInUserId) {
+        return res
+          .status(403)
+          .send("You are not authorized to delete this item");
+      }
+      item.remove((err) => {
+        if (err) {
+          return res.status(500).send(err);
+        }
+
+        res.status(204).send();
+      });
     })
     .catch((err) => {
       if (err.statusCode === 404) {

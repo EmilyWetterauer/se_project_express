@@ -1,6 +1,7 @@
 const {
   ERROR_CODE_500,
   ERROR_CODE_400,
+  ERROR_CODE_403,
   ERROR_CODE_404,
 } = require("../utils/errors");
 
@@ -40,10 +41,10 @@ const createItem = (req, res) => {
 };
 
 const deleteItem = (req, res) => {
-  const { authorization } = req.headers;
-  const token = authorization.replace("Bearer ", "");
-  const { _id: loggedInUserId } = jwt.decode(token, { json: true });
-  console.log("loggedIn USer", loggedInUserId);
+  // const { authorization } = req.headers;
+  // const token = authorization.replace("Bearer ", "");
+  // const { _id: loggedInUserId } = jwt.decode(token, { json: true });
+  // console.log("loggedIn USer", loggedInUserId);
   ClothingItem.findById(req.params._id)
     .orFail(() => {
       const error = new Error("Item ID not found");
@@ -51,17 +52,13 @@ const deleteItem = (req, res) => {
       throw error;
     })
     .then((item) => {
-      if (item.owner !== loggedInUserId) {
+      if (!item.owner.equals(req.user._id)) {
         return res
-          .status(403)
-          .send("You are not authorized to delete this item");
+          .status(ERROR_CODE_403.status)
+          .send({ message: ERROR_CODE_403.message });
       }
-      item.remove((err) => {
-        if (err) {
-          return res.status(500).send(err);
-        }
-
-        res.status(204).send();
+      item.deleteOne({ _id: item._id }).then(() => {
+        return res.status(200).send();
       });
     })
     .catch((err) => {

@@ -5,11 +5,13 @@ const {
   ERROR_CODE_400,
   ERROR_CODE_401,
   ERROR_CODE_404,
-  ERROR_CODE_422,
+  ERROR_CODE_409,
 } = require("../utils/errors");
 const jwt = require("jsonwebtoken");
 
-const { JWT_SECRET } = process.env;
+const { DEFAULT_JWT } = require("../utils/config");
+
+const { JWT_SECRET = DEFAULT_JWT } = process.env;
 const User = require("../models/user");
 
 function getUsers(req, res) {
@@ -22,32 +24,32 @@ function getUsers(req, res) {
     );
 }
 
-function getUser(req, res) {
-  User.findById(req.params._id)
-    .orFail(() => {
-      const error = new Error("Item ID not found");
-      error.statusCode = 404;
-      throw error;
-    })
-    .then((user) => {
-      res.send({ data: user });
-    })
-    .catch((err) => {
-      if (err.statusCode === 404) {
-        res
-          .status(ERROR_CODE_404.status)
-          .send({ message: ERROR_CODE_404.message });
-      } else if (err.statusCode === 400 || err.name === "CastError") {
-        res
-          .status(ERROR_CODE_400.status)
-          .send({ message: ERROR_CODE_400.message });
-      } else {
-        res
-          .status(ERROR_CODE_500.status)
-          .send({ message: ERROR_CODE_500.message });
-      }
-    });
-}
+// function getUser(req, res) {
+//   User.findById(req.params._id)
+//     .orFail(() => {
+//       const error = new Error("Item ID not found");
+//       error.statusCode = 404;
+//       throw error;
+//     })
+//     .then((user) => {
+//       res.send({ data: user });
+//     })
+//     .catch((err) => {
+//       if (err.statusCode === 404) {
+//         res
+//           .status(ERROR_CODE_404.status)
+//           .send({ message: ERROR_CODE_404.message });
+//       } else if (err.statusCode === 400 || err.name === "CastError") {
+//         res
+//           .status(ERROR_CODE_400.status)
+//           .send({ message: ERROR_CODE_400.message });
+//       } else {
+//         res
+//           .status(ERROR_CODE_500.status)
+//           .send({ message: ERROR_CODE_500.message });
+//       }
+//     });
+// }
 
 function createUser(req, res) {
   const { name, avatar, email, password } = req.body;
@@ -55,7 +57,10 @@ function createUser(req, res) {
   bcrypt.hash(password, 10).then((hash) =>
     User.create({ name, avatar, email, password: hash })
 
-      .then((user) => res.send({ data: user }))
+      .then((user) => {
+        const { name, avatar, email } = user;
+        res.send({ data: { name, avatar, email } });
+      })
       .catch((err) => {
         if (err.name === "ValidationError") {
           res
@@ -63,8 +68,8 @@ function createUser(req, res) {
             .send({ message: ERROR_CODE_400.message });
         } else if (err.code === 11000) {
           res
-            .status(ERROR_CODE_422.status)
-            .send({ message: ERROR_CODE_422.message });
+            .status(ERROR_CODE_409.status)
+            .send({ message: ERROR_CODE_409.message });
         } else {
           res
             .status(ERROR_CODE_500.status)
@@ -78,14 +83,13 @@ function login(req, res) {
   const { email, password } = req.body;
   User.findUserByCredentials(email, password)
     .then((user) => {
-      if (user) {
-        const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
-          expiresIn: "7d",
-        });
-        res.send({ token });
-      } else {
-        throw new Error();
-      }
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+        expiresIn: "7d",
+      });
+      res.send({ token });
+      // } else {
+      // throw new Error();
+      // }
     })
     .catch((err) => {
       res
@@ -96,7 +100,8 @@ function login(req, res) {
 
 const getCurrentUser = (req, res, next) => {
   // console.log("req.params.id", req.params.id);
-  User.findById(req.body._id)
+  User.findById(req.user._id)
+    // User.findById(req.body._id)
     .orFail(() => {
       const error = new Error("Item ID not found");
       error.statusCode = 404;
@@ -124,9 +129,12 @@ const getCurrentUser = (req, res, next) => {
 
 const updateProfile = (req, res) => {
   User.findOneAndUpdate(
-    { _id: req.body._id },
+    { _id: req.user._id },
+    // { _id: req.body._id },
     { name: "michael" },
-    { new: true }
+    { new: true },
+    { runValidators: true },
+    { new: true, runValidators: true }
   )
     .orFail(() => {
       const error = new Error("Item ID not found");
@@ -141,7 +149,7 @@ const updateProfile = (req, res) => {
         res
           .status(ERROR_CODE_404.status)
           .send({ message: ERROR_CODE_404.message });
-      } else if (err.statusCode === 400 || err.name === "CastError") {
+      } else if (err.name === "ValidationError" || err.name === "CastError") {
         res
           .status(ERROR_CODE_400.status)
           .send({ message: ERROR_CODE_400.message });
@@ -154,7 +162,6 @@ const updateProfile = (req, res) => {
 };
 
 module.exports = {
-  getUser,
   getUsers,
   createUser,
   login,

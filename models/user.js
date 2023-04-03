@@ -51,7 +51,9 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
         return Promise.reject(new Error("Incorrect email or password"));
       }
       const valid = await bcrypt.compare(password, user.password);
-      return valid ? user : null;
+      return valid
+        ? user
+        : Promise.reject(new Error("Incorrect email or password"));
     });
 };
 module.exports = mongoose.model("user", userSchema);

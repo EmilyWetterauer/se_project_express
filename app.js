@@ -3,7 +3,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 require("dotenv").config();
-console.log(process.env.JWT_SECRET);
 const app = express();
 const cors = require("cors");
 app.use(cors());
@@ -17,7 +16,7 @@ mongoose
     console.log("Error connecting to MongoDB:", error.message);
   });
 
-const routes = require("./routes");
+const routes = require("./routes/index");
 
 app.use(express.json());
 

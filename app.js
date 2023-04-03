@@ -3,8 +3,10 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 require("dotenv").config();
+
 const app = express();
 const cors = require("cors");
+
 app.use(cors());
 
 mongoose
@@ -19,13 +21,6 @@ mongoose
 const routes = require("./routes/index");
 
 app.use(express.json());
-
-// app.use((req, res, next) => {
-//   req.user = {
-//     _id: "5d8b8592978f8bd833ca8133",
-//   };
-//   next();
-// });
 
 app.use(routes);
 

@@ -5,8 +5,6 @@ const {
   ERROR_CODE_404,
 } = require("../utils/errors");
 
-const jwt = require("jsonwebtoken");
-
 const ClothingItem = require("../models/clothingItem");
 
 const getItems = (req, res) => {
@@ -41,10 +39,6 @@ const createItem = (req, res) => {
 };
 
 const deleteItem = (req, res) => {
-  // const { authorization } = req.headers;
-  // const token = authorization.replace("Bearer ", "");
-  // const { _id: loggedInUserId } = jwt.decode(token, { json: true });
-  // console.log("loggedIn USer", loggedInUserId);
   ClothingItem.findById(req.params._id)
     .orFail(() => {
       const error = new Error("Item ID not found");
@@ -53,12 +47,12 @@ const deleteItem = (req, res) => {
     })
     .then((item) => {
       if (!item.owner.equals(req.user._id)) {
-        return res
+        res
           .status(ERROR_CODE_403.status)
           .send({ message: ERROR_CODE_403.message });
       }
       item.deleteOne({ _id: item._id }).then(() => {
-        return res.status(200).send();
+        res.status(200).send({ message: "Item deleted" });
       });
     })
     .catch((err) => {

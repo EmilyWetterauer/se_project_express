@@ -9,8 +9,12 @@ const ClothingItem = require("../models/clothingItem");
 
 const getItems = (req, res) => {
   ClothingItem.find()
-    .then((item) => res.send({ data: item }))
-    .catch(() =>
+    .then((items) => {
+      return res.send(items);
+    })
+    .catch((e) =>
+      // .then((item) => res.send({ data: item }))
+      // .catch(() =>
       res
         .status(ERROR_CODE_500.status)
         .send({ message: ERROR_CODE_500.message })
@@ -18,6 +22,7 @@ const getItems = (req, res) => {
 };
 
 const createItem = (req, res) => {
+  console.log("req", req.body);
   const owner = req.user._id;
   const { name, weather, imageUrl } = req.body;
 

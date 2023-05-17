@@ -9,10 +9,8 @@ const ClothingItem = require("../models/clothingItem");
 
 const getItems = (req, res) => {
   ClothingItem.find()
-    .then((items) => {
-      return res.send(items);
-    })
-    .catch((e) =>
+    .then((items) => res.send(items))
+    .catch(() =>
       // .then((item) => res.send({ data: item }))
       // .catch(() =>
       res

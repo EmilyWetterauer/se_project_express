@@ -9,6 +9,7 @@ const ClothingItem = require("../models/clothingItem");
 
 const getItems = (req, res) => {
   ClothingItem.find()
+    .sort({ createdAt: -1 })
     .then((items) => res.send(items))
     .catch(() =>
       // .then((item) => res.send({ data: item }))

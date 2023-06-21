@@ -2,6 +2,12 @@ const express = require("express");
 
 const mongoose = require("mongoose");
 
+const { errors } = require("celebrate");
+
+const { requestLogger, errorLogger } = require("./middlewares/logger");
+
+const {} = require("./middlewares/validation");
+
 require("dotenv").config();
 
 const { errorHandler } = require("./middlewares/errorHandler");
@@ -24,7 +30,13 @@ const routes = require("./routes/index");
 
 app.use(express.json());
 
+app.use(requestLogger);
+
 app.use(routes);
+
+app.use(errorLogger);
+
+app.use(errors());
 
 app.use(errorHandler);
 

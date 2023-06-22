@@ -6,7 +6,7 @@ const { ERROR_CODE_500 } = require("../utils/errors");
 
 const ClothingItem = require("../models/clothingItem");
 
-const getItems = (req, res) => {
+const getItems = (req, res, next) => {
   ClothingItem.find()
     .sort({ createdAt: -1 })
     .then((items) => res.send(items))

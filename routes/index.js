@@ -18,7 +18,7 @@ router.post("/signup", validateUserInfoBody, createUser);
 
 router.post("/signin", validateUserAuthentication, login);
 
-router.use("/", (req, res) => {
+router.use("/", (req, res, next) => {
   next(new NotFoundError());
 });
 

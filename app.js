@@ -6,7 +6,7 @@ const { errors } = require("celebrate");
 
 const { requestLogger, errorLogger } = require("./middlewares/logger");
 
-const {} = require("./middlewares/validation");
+// const {} = require("./middlewares/validation");
 
 require("dotenv").config();
 

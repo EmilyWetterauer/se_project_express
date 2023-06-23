@@ -1,4 +1,4 @@
-const { Joi, celebrate } = require("celebrate");
+const { celebrate, Joi } = require("celebrate");
 const validator = require("validator");
 
 // separate validateUrl function

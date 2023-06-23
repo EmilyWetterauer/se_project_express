@@ -16,8 +16,7 @@ const cors = require("cors");
 app.use(cors());
 
 mongoose
-  // .connect("mongodb://localhost:27017/wtwr_db")
-  .connect("mongodb://34.127.97.52:27017/wtwr_db")
+  .connect("mongodb://localhost:27017/wtwr_db")
   .then(() => {
     console.log("Connected to MongoDB");
   })

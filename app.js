@@ -4,16 +4,15 @@ const mongoose = require("mongoose");
 
 const { errors } = require("celebrate");
 
-const { requestLogger, errorLogger } = require("./middlewares/logger");
-
 require("dotenv").config();
-
-const { errorHandler } = require("./middlewares/errorHandler");
 
 const app = express();
 const cors = require("cors");
 
+const { errorHandler } = require("./middlewares/errorHandler");
+
 app.use(cors());
+const { requestLogger, errorLogger } = require("./middlewares/logger");
 
 mongoose
   .connect("mongodb://localhost:27017/wtwr_db")

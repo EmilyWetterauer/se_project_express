@@ -2,8 +2,6 @@ const { NotFoundError } = require("../utils/NotFoundError");
 const { BadRequestError } = require("../utils/BadRequestError");
 const { ForbiddenError } = require("../utils/ForbiddenError");
 
-const { ERROR_CODE_500 } = require("../utils/errors");
-
 const ClothingItem = require("../models/clothingItem");
 
 const getItems = (req, res, next) => {
@@ -14,7 +12,6 @@ const getItems = (req, res, next) => {
 };
 
 const createItem = (req, res, next) => {
-  console.log("req", req.body);
   const owner = req.user._id;
   const { name, weather, imageUrl } = req.body;
 
@@ -24,11 +21,9 @@ const createItem = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === "ValidationError") {
-        next(new BadRequestError());
+        next(new BadRequestError("invalid data"));
       } else {
-        res
-          .status(ERROR_CODE_500.status)
-          .send({ message: ERROR_CODE_500.message });
+        next(err);
       }
     });
 };
@@ -40,9 +35,11 @@ const deleteItem = (req, res, next) => {
     })
     .then((item) => {
       if (!item.owner.equals(req.user._id)) {
-        next(new ForbiddenError());
+        return next(
+          new ForbiddenError("You are not authorized to delete this item")
+        );
       }
-      item.deleteOne({ _id: item._id }).then(() => {
+      return item.deleteOne({ _id: item._id }).then(() => {
         res.status(200).send({ message: "Item deleted" });
       });
     })

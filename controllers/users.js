@@ -2,8 +2,6 @@ const bcrypt = require("bcrypt");
 
 const jwt = require("jsonwebtoken");
 
-const { ERROR_CODE_500 } = require("../utils/errors");
-
 const { NotFoundError } = require("../utils/NotFoundError");
 const { BadRequestError } = require("../utils/BadRequestError");
 const { UnauthorizedError } = require("../utils/UnauthorizedError");
@@ -14,14 +12,10 @@ const DEFAULT_JWT = require("../utils/config");
 const { JWT_SECRET = DEFAULT_JWT } = process.env;
 const User = require("../models/user");
 
-function getUsers(req, res) {
+function getUsers(req, res, next) {
   User.find()
     .then((user) => res.send({ data: user }))
-    .catch(() =>
-      res
-        .status(ERROR_CODE_500.status)
-        .send({ message: ERROR_CODE_500.message })
-    );
+    .catch(next);
 }
 
 function createUser(req, res, next) {
@@ -35,13 +29,11 @@ function createUser(req, res, next) {
       })
       .catch((err) => {
         if (err.name === "ValidationError") {
-          next(new BadRequestError());
+          next(new BadRequestError("invalid data"));
         } else if (err.code === 11000) {
-          next(new ConflictError());
+          next(new ConflictError("unique constraint violation."));
         } else {
-          res
-            .status(ERROR_CODE_500.status)
-            .send({ message: ERROR_CODE_500.message });
+          next(err);
         }
       })
   );
@@ -84,7 +76,13 @@ const updateProfile = (req, res, next) => {
     .then((user) => {
       res.send({ data: user });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === "ValidationError") {
+        next(new BadRequestError("invalid data"));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports = {
